@@ -1,0 +1,40 @@
+
+.login input {
+    width: 75%;
+outline: none;
+height: 5vh;
+color: #033E56;
+}
+form h2{
+    color: #033E56;
+}
+
+.login p {
+    color: red;
+}
+.login-btn button{
+width : 65%;
+height: 5vh;
+border: none;
+background-color: #033E56;
+color: white;
+transition: all 0.5s ease;
+cursor: pointer;
+margin-bottom: 20px;
+}
+.login-btn{
+    margin-bottom: 20px;
+}
+.login-btn button:hover{
+background-color: white;
+border: 1px solid #033E56;
+font-weight: bolder;
+color: #033E56
+}
+.home{
+    background-image: url('../../public/images/logo-topbar.png');
+    background-size: auto;
+    background-position: center;
+    background-repeat: no-repeat;
+       z-index: -10000;
+}
