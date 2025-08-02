@@ -24,10 +24,12 @@ exports.registerUser = async (req, res) =>{
 
 exports.loginUser = async (req, res)=>{
  
+    console.log(req.body);
     
     try{
 const {username, password } = req.body;
 
+console.log(username, password);
 
 const user = await User.findOne({username});
 if(!user){
@@ -37,7 +39,12 @@ const isPass = await bcrypt.compare(password, user.password);
 if(!isPass){
     return res.status(400).json({message: 'incorrect password'});
 }
-const token = jwt.sign({userId: user._id, role: user.role}, process.env.JWT_SECRET, {expiresIn: '1h'});
+const token = jwt.sign(
+    {
+        userId: user._id,
+         role: user.role
+        }, 
+        process.env.JWT_SECRET, {expiresIn: '1h'});
 const {password: _, ...userWithoutPassword} = user.toObject();
 res.status(200).json({token,user: userWithoutPassword});
 }

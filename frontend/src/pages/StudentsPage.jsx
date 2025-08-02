@@ -16,9 +16,9 @@ const [editingStudent, setEditingStudent] = useState(null);
 const [showEditModal, setShowEditModal] = useState(false);
 
     const initialFormData = {
-    fullName:'', 
-    username:'', 
-    password:'',
+    firstName:'',
+    fathersName:'',
+    gFathersName:'', 
     classId:'', 
     dob:'',
     gender:'', 
@@ -46,10 +46,11 @@ toast.error(`Deactivation failed: ${error.response?.data?.message}`);
 
 const handleEdit = (student) => {
     setEditingStudent(student);
+    const name = student.fullName.split(' ');
     setFormData({
-        fullName: student.fullName || '',
-        //username: student.user?.username || '',
-       // password: '', // leave empty unless updating
+        firstName: name[0] || '',
+        fathersName: name[1] || '',
+        gFathersName: name[2] || '',
         classId: student.class?.name + student.class?.section || '',
         dob: student.dob?.split('T')[0] || '',
         gender: student.gender || '',
@@ -93,12 +94,17 @@ const formatDate = (dateString) => {
         });
         if(photo) data.append("photo", photo);
         try {
-             await api.post("/students", data, {
+            const response = await api.post("/students", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
             setShowModal(false);
             setFormData(initialFormData);
             toast.success('student added successfully');
+            const {username, password} = response.data.credentials;
+            alert(`
+              username: ${username}
+              \n
+              password: ${password}`)
             const res = await api.get('/students');
             setStudents(res.data);
         } catch (error) {
@@ -109,7 +115,9 @@ const handleUpdateStudent = async (e) => {
     e.preventDefault();
 
    const data = new FormData();
-  data.append('fullname', formData.fullName);
+  data.append('firstName', formData.firstName);
+  data.append('fathersName', formData.fathersName);
+  data.append('gfathersName', formData.gFathersName);
   data.append('dob', formData.dob);
   data.append('gender', formData.gender);
   data.append('classId', formData.classId);
@@ -221,12 +229,34 @@ const handleUpdateStudent = async (e) => {
                   <div className="row">
                     {/* Name */}
                     <div className="col-md-6 mb-2">
-                      <label>FullName</label>
+                      <label>Name</label>
                       <input
                         type="text"
                         className="form-control"
-                        name="fullName"
-                        value={formData.fullName}
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                       <div className="col-md-6 mb-2">
+                      <label>Father's Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="fathersName"
+                        value={formData.fathersName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                       <div className="col-md-6 mb-2">
+                      <label>Grandfather's Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="gFathersName"
+                        value={formData.gFathersName}
                         onChange={handleChange}
                         required
                       />
@@ -257,7 +287,7 @@ const handleUpdateStudent = async (e) => {
                       </select>
                     </div>
                         <div className="col-md-6 mb-2">
-                      <label>Class & Section (e.g., 1A)</label>
+                      <label>Grade (e.g., 1A)</label>
                       <input
                         type="text"
                         className="form-control"
@@ -303,7 +333,7 @@ const handleUpdateStudent = async (e) => {
                       />
                     </div>
                            {/* Username */}
-                    <div className="col-md-6 mb-2">
+                    {/* <div className="col-md-6 mb-2">
                       <label>Username</label>
                       <input
                         type="text"
@@ -314,8 +344,8 @@ const handleUpdateStudent = async (e) => {
                         autoComplete='off'
                         required
                       />
-                    </div>
-                      {/* Password */}
+                    </div> */}
+                      {/* Password
                     <div className="col-md-6 mb-2">
                       <label>Password</label>
                       <input
@@ -327,7 +357,7 @@ const handleUpdateStudent = async (e) => {
                         autoComplete='off'
                         required
                       />
-                    </div>
+                    </div> */}
                   
                
 
@@ -395,12 +425,41 @@ const handleUpdateStudent = async (e) => {
           <div className="modal-body row g-3">
 
             {/* Name */}
-            <div className="col-md-6">
+            {/* <div className="col-md-6">
               <label className="form-label">Full Name</label>
               <input type="text" className="form-control" value={formData.fullName}
                      onChange={(e) => setFormData({...formData, fullName: e.target.value})} required />
-            </div>
-
+            </div> */}
+ <div className="col-md-6 mb-2">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                        required
+                      />
+                    </div>
+                       <div className="col-md-6 mb-2">
+                      <label>Father's Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.fathersName}
+                        onChange={(e) => setFormData({...formData, fathersName: e.target.value})}
+                        required
+                      />
+                    </div>
+                       <div className="col-md-6 mb-2">
+                      <label>Grandfather's Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.gFathersName}
+                        onChange={(e) => setFormData({...formData, gFathersName: e.target.value})}
+                        required
+                      />
+                    </div>
             {/* Class */}
             <div className="col-md-3">
               <label className="form-label">Class (e.g. 1A)</label>

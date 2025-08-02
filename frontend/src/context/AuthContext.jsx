@@ -1,5 +1,5 @@
-import {createContext, useState} from 'react'
-
+import {createContext, useState, useEffect} from 'react'
+import { isTokenExpired } from '../utils/auth';
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({children}) => {
@@ -7,6 +7,36 @@ export const AuthProvider = ({children}) => {
         const userFromStorage = localStorage.getItem('user');
         return userFromStorage ? JSON.parse(userFromStorage) : null;
     });
+
+
+
+// useEffect(() => {
+//  const checkToken = () => {
+//     const token = localStorage.getItem('token');
+//     if(isTokenExpired(token)){
+//         logout();
+//     }
+//  };
+
+//  checkToken();
+
+// const interval = setInterval(checkToken, 60000);
+
+// const handleVisilityChange = () => {
+//     if(document.visibilityState === 'visible'){
+//         checkToken();
+//     }
+// }
+
+// window.addEventListener('visibilitychange', handleVisilityChange);
+
+// return () => {
+//     clearInterval(interval);
+//     window.removeEventListener('visibilitychange', handleVisilityChange);
+// }
+
+
+// },[]);
 
 
     const login = (userData, token) => {
