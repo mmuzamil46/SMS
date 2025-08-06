@@ -32,7 +32,16 @@ const teacherSchema = new mongoose.Schema({
         type : String
     },
     qualification : {
-        type : String
+        type : String,
+        enum:['BA','BSc','MA','MSc','PhD'],
+    },
+    teachingSince : {
+        type : Date,
+        required : true
+    },
+    isActive : {
+        type : Boolean,
+        default : true
     }
 }, {timestamps : true});
 

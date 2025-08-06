@@ -8,6 +8,8 @@ import StudentsPage from './pages/StudentsPage';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import ClassesPage from './pages/ClassesPage';
+import TeachersPage from './pages/teachersPage';
+import SubjectsPage from './pages/SubjectPage';
 function App() {
   // const location = useLocation();
   // const isLoginPage = location.pathname.includes('/login');
@@ -20,6 +22,8 @@ function App() {
  <Route exact path='/' element={<Home/>} />
   <Route path='/students' element={<StudentsPage />} />
   <Route path='/classes' element={<ClassesPage/>}/>
+  <Route path='/teachers' element={<TeachersPage/>}/>
+  <Route path = '/subjects' element={<SubjectsPage/>}/>
 </Route>
  
 

@@ -5,9 +5,15 @@ const subjectSchema = mongoose.Schema({
         type : String,
         required : true
     },
-    code:{
-        type: String,
-    }
+  gradeRange:{
+    type : [Number],
+    required : true
+  },
+  stream:{
+    type : String,
+    enum : ['natural', 'social', 'general'], default: 'general'
+  }
+
 
 
 }, {timestamps : true});

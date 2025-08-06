@@ -16,11 +16,11 @@ const PrivateRoute = () => {
   }
 
   return (
-    <div className="d-flex">
+    <div className="app-container">
       <Topbar />
-      <div className="d-flex pt-5 flex-grow-1">
+      <div className="main-content-container">
         <Sidebar />
-        <div className="p-3 flex-grow-1">
+        <div className="content-area">
           <Outlet />
         </div>
       </div>

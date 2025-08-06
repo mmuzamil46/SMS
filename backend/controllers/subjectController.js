@@ -2,12 +2,17 @@ const Subject = require('../models/subject');
 
 exports.createSubject = async (req, res) => {
   try {
-    const { name, code } = req.body;
+     const { name,  description, gradeRange, stream } = req.body;
 
-    const existing = await Subject.findOne({ $or: [{ name }, { code }] });
+    const existing = await Subject.findOne({ name });
     if (existing) return res.status(400).json({ message: 'Subject already exists' });
 
-    const subject = await Subject.create({ name, code });
+  const subject = await Subject.create({
+      name,
+      description,
+      gradeRange,
+      stream: stream || 'general'
+    });
     res.status(201).json({ message: 'Subject created', subject });
   } catch (err) {
     res.status(500).json({ message: 'Error creating subject', error: err.message });
@@ -36,8 +41,16 @@ exports.getSubjectById = async (req, res) => {
 
 exports.updateSubject = async (req, res) => {
   try {
-    const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const {name, description, gradeRange, stream} = req.body
+  const subject = await Subject.findById(req.params.id);
+
     if (!subject) return res.status(404).json({ message: 'Subject not found' });
+
+    subject.name = name || subject.name;
+    subject.description = description || subject.description;
+    subject.gradeRange = gradeRange?.length ? gradeRange : subject.gradeRange;
+    subject.stream = stream || subject.stream;
+    await subject.save();
 
     res.status(200).json(subject);
   } catch (err) {

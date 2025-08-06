@@ -1,53 +1,52 @@
-/* aside{
-    background-color: #033E56;
-     width: 15%; 
-    height: 100vh;
-    position: fixed;
-    top: 10vh;
-    z-index: -1000;
-    
-}
-h2{
-      display: flex;
-    align-items: center;
-    justify-content: start;
-    gap: 15px;
-    color:#f2bc3e;
-    padding-left: 10px;
-    padding-top: 10px;
-    text-align: center;
-}
-.side-menus li{
-background-color: #f2bc3e;
-height: 35px;
-padding-left: 15px;
- text-align: center; 
-font-size: 20px;
-font-weight: bolder;
-color: #033E56;
-border-radius: 25px;
-cursor: pointer;
-}
-.side-link{
-    display: flex;
-    align-items: center;
-     justify-content: start; 
-    gap: 10px;
-    text-decoration: none ;
-    color: #033E56 ;
-    cursor: pointer;
-} */
- aside {
-  background-color: #033E56;
-  width: 15%;
-  height: 100vh;
-  /* position: fixed; */
-  /* top: 10vh; */
-  left: 0;
-  padding: 20px 0;
-  z-index: 1; /* Increased z-index to ensure it appears above other content */
+/* Main Layout Structure */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
+.main-content-container {
+  display: flex;
+  flex: 1;
+  margin-top: 10vh; /* Matches topbar height */
+}
+
+/* Sidebar Styles */
+aside {
+  background-color: #033E56;
+  width: 15%;
+  min-width: 250px; /* Minimum width to prevent squeezing */
+  height: calc(100vh - 10vh); /* Full height minus topbar */
+  position: fixed;
+  left: 0;
+  top: 10vh; /* Matches topbar height */
+  padding: 20px 0;
+  z-index: 100;
+  overflow-y: auto; /* Enable scrolling if content is long */
+  transition: width 0.3s ease;
+}
+
+/* Topbar Styles */
+.topbar {
+  position: fixed;
+  height: 10vh;
+  background-color: #033E56;
+  color: #f2bc3e;
+  width: 100%;
+  z-index: 1000; /* Higher than sidebar */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Content Area Styles */
+.content-area {
+  margin-left: 15%; /* Same as sidebar width */
+  width: 85%;
+  padding: 20px;
+  margin-top: 10vh; /* Matches topbar height */
+  min-height: calc(100vh - 10vh);
+}
+
+/* Sidebar Content Styles */
 h2 {
   display: flex;
   align-items: center;
@@ -85,32 +84,53 @@ h2 {
   font-size: 1rem;
   font-weight: bold;
   transition: all 0.3s ease;
-  cursor: pointer; /* Ensures cursor shows as pointer */
+  cursor: pointer;
 }
 
 .side-link:hover {
-  background-color: #e0ab2e; /* Slightly darker on hover */
+  background-color: #e0ab2e;
   color: #022a3a;
 }
-.topbar{
-   position: fixed;
-    height: 10vh;
-    background-color: #033E56;
-    color: #f2bc3e;
-    width: 100%;
-    z-index: 1000;
-}
-.user-icon{
-    font-size: 16px;
-    padding: 10px;
-    cursor: pointer;
-    display: flex ;
-    align-items: center;
-    justify-content: center
 
+/* User Icon Styles */
+.user-icon {
+  font-size: 16px;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-@media only screen and (max-width:1450px){
-h2{
+
+/* Responsive Adjustments */
+@media only screen and (max-width: 1450px) {
+  h2 {
     font-size: 30px;
+  }
 }
+
+@media only screen and (max-width: 768px) {
+  aside {
+    width: 70px;
+    min-width: 70px;
+    overflow: hidden;
+  }
+  
+  aside:hover {
+    width: 250px;
+  }
+  
+  .content-area {
+    margin-left: 70px;
+    width: calc(100% - 70px);
+  }
+  
+  h2 span, .side-link span {
+    display: none;
+  }
+  
+  aside:hover h2 span, 
+  aside:hover .side-link span {
+    display: inline;
+  }
 }

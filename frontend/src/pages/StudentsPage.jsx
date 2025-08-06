@@ -145,7 +145,7 @@ const handleUpdateStudent = async (e) => {
   }
   
   return (
-    <div className='pt-5'>
+    <div className='pt-0'>
       <ToastContainer />
         <h2 className='mb-4'>Students</h2>
              <button

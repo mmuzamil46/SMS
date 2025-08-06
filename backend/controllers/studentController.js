@@ -2,6 +2,7 @@ const Student = require('../models/student');
 const User = require('../models/user');
 const Class = require('../models/class')
 const bcrypt = require('bcryptjs');
+const {generateUsername, generatePwd} = require('../utils/userpwdGenerator');
 require('dotenv').config();
 const classCapacity = process.env.CLASS_CAPACITY;
 
@@ -31,28 +32,6 @@ const generateStudentId = async (classDoc) => {
   const paddedCount = String(count + 1).padStart(3, '0');
   return `${grade}${section}${paddedCount}/${currentYear}`;
 };
-const generateUsername = async (firstName, fathersName) => {
-  const baseUsername = (
-    firstName.charAt(0) + fathersName.replace(/\s+/g, '')
-  ).toLowerCase();
-let username = baseUsername;
-let counter =1;
-while(await User.exists({username})){
-  username = `${baseUsername}${counter++}`;
-}
-
-return username;
-
-}
-
-const generatePwd = async () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let password = '';
-   for(let i=0; i<8; i++){
-    password += chars.charAt(Math.floor(Math.random()* chars.length))
-   }
-   return password;
-}
 
 exports.createStudent = async (req , res) => {
   //console.log(req.file);
@@ -72,27 +51,8 @@ exports.createStudent = async (req , res) => {
         // console.log(req.body);
         const password = await generatePwd();
 
-        // const classMatch = classId.match(/^(\d+)([A-Za-z])$/);
-        // if(!classMatch){
-        //   return res.status(400).json({message:'invalid class format Use format like "10A", "1B"'})
-        // }
-        // console.log("ClassId received:", classId);
-// console.log("Regex Match:", classMatch);
-        // const grade = classMatch[1]
-        // const section = classMatch[2].toUpperCase();
-        // const classDoc = await Class.findOne({name:grade, section: section });
-        // console.log(classDoc._id);
-        
-    //       if (!classDoc) {
-    //   return res.status(404).json({ message: `Class ${grade}${section} not found` });
-    // }
-    //         const existingUser = await User.findOne({username});
-//console.log(existingUser);
-
-        //  if(existingUser){
-        //   return res.status(400).json({message: 'username already exists!!'});
-
-        //  }
+       
+    
          const hashedPassword = await bcrypt.hash(password, 10);
 const username = await generateUsername(firstName, fathersName);
          let user = await User.create({

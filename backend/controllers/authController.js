@@ -24,12 +24,12 @@ exports.registerUser = async (req, res) =>{
 
 exports.loginUser = async (req, res)=>{
  
-    console.log(req.body);
+  
     
     try{
 const {username, password } = req.body;
 
-console.log(username, password);
+
 
 const user = await User.findOne({username});
 if(!user){

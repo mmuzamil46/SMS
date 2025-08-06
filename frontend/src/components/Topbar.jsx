@@ -51,7 +51,7 @@ if(dropdownRef.current && !dropdownRef.current.contains(e.target)){
                 style={{ cursor: "pointer", color: "#f2bc3e" }}
               >
                 <img 
-                  src="http:://localhost:1000/uploads/1753518341618-photo_2025-07-14_14-35-24.jpg" 
+                  src="http://localhost:1000/uploads/1753518341618-photo_2025-07-14_14-35-24.jpg" 
                   alt="Profile" 
                   width={30} 
                   height={30} 
