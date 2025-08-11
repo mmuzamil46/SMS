@@ -13,6 +13,6 @@ router.post('/',auth,authorizeRoles('admin','student'), createSubject);
 router.get('/',auth,authorizeRoles('admin','student'), getAllSubjects);
 router.get('/:id',auth,authorizeRoles('admin'), getSubjectById);
 router.put('/:id',auth,authorizeRoles('admin','student'), updateSubject);
-router.delete('/:id',auth,authorizeRoles('admin'), deleteSubject);
+router.delete('/:id',auth,authorizeRoles('admin','student'), deleteSubject);
 
 module.exports = router

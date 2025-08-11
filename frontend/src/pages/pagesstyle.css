@@ -38,3 +38,23 @@ color: #033E56
     background-repeat: no-repeat;
        z-index: -10000;
 }
+/* React Select styles */
+.select__control {
+  min-height: 38px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+}
+
+.select__control--is-focused {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.select__multi-value {
+  background-color: #e9ecef;
+  border-radius: 2px;
+}
+
+.select__multi-value__label {
+  color: #495057;
+}

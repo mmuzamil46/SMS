@@ -1,5 +1,5 @@
 const Class = require('../models/class');
-
+const Teacher = require('../models/teacher'); 
 
 
 exports.createClass = async (req, res) => {
@@ -47,10 +47,16 @@ exports.getAllClasses = async (req, res) => {
           name: 1,
           section: 1,
           studentCount: { $size: "$students" },
-          homeRoomTeacher: "$teacher.user"
+          homeRoomTeacher: {
+            _id: "$teacher._id",
+            fullName: "$teacher.fullName",
+
+          }
         }
       }
     ]);
+   // console.log(classes);
+    
     res.status(200).json(classes);
   } catch (err) {
     res.status(500).json({ message: "Error fetching classes", error: err.message });
@@ -82,12 +88,22 @@ exports.getClassById = async (req, res) => {
 exports.updateClass = async (req, res)=>{
 
     try {
-        const updatedClass = await Class.findByIdAndUpdate(req.params.id, req,body,{new:true})
+      const {name, section, homeRoomTeacher} = req.body
+        const updatedClass = await Class.findByIdAndUpdate(req.params.id, {name, section, homeRoomTeacher},{new:true})
         if(!updatedClass) 
             return res.status(404).json({message: 'class not found'});
-
+ if(homeRoomTeacher) {
+  await Teacher.findByIdAndUpdate(
+    homeRoomTeacher, {
+      $addToSet: {classes: updatedClass._id}
+    },
+    {new:true}
+  );
+ }
         res.status(200).json(updatedClass);
     } catch (error) {
+      console.log(error);
+      
          res.status(500).json({message : 'Error updating class', error:error.message})
     }
 }

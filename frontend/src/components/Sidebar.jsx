@@ -1,19 +1,23 @@
 import { Link } from 'react-router-dom';
-import { FaUserGraduate, FaTachometerAlt } from 'react-icons/fa';
+import { FaUserGraduate, FaTachometerAlt, FaClipboardList, FaChartBar, FaClipboardCheck,FaBell} from 'react-icons/fa';
 import { GiTeacher } from "react-icons/gi";
 import { MdMeetingRoom } from "react-icons/md";
 import { LiaSchoolSolid } from "react-icons/lia";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './compstyle.css';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 const Sidebar = () => {
+  const {user} = useContext(AuthContext);
+const isTeacher = user?.role === 'teacher';
   return (
     <aside className='d-flex flex-column align-items-start'>
       <h2 className='d-flex align-items-center gap-2'>
         <FaTachometerAlt aria-hidden="true" /> Dashboard
       </h2>
       <ul className='side-menus container d-flex flex-column gap-3 list-unstyled mt-5'>
-        <li>
+       {!isTeacher && (<> <li>
           <Link to="/students" className='side-link d-flex align-items-center gap-2'>
             <FaUserGraduate aria-hidden="true" /> Students
           </Link>
@@ -33,6 +37,32 @@ const Sidebar = () => {
             <LiaSchoolSolid aria-hidden="true" /> Subjects
           </Link>
         </li>
+         </>)
+         }
+        {isTeacher && (
+          <>
+            <li>
+              <Link to="/assessment" className='side-link d-flex align-items-center gap-2'>
+                <FaClipboardList aria-hidden="true" /> Assessment
+              </Link>
+            </li>
+            <li>
+              <Link to="/attendance" className='side-link d-flex align-items-center gap-2'>
+                <FaClipboardCheck aria-hidden="true" /> Attendance
+              </Link>
+            </li>
+            <li>
+              <Link to="/grade-report" className='side-link d-flex align-items-center gap-2'>
+                <FaChartBar aria-hidden="true" /> Grade Report
+              </Link>
+            </li>
+            <li>
+              <Link to="/notify" className='side-link d-flex align-items-center gap-2'>
+                <FaBell aria-hidden="true" /> Notify
+              </Link>
+            </li>
+          </>
+        )}
       </ul>
     </aside>
   )

@@ -21,7 +21,19 @@ exports.createSubject = async (req, res) => {
 
 exports.getAllSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find();
+    const subjects = await Subject.aggregate(
+      [
+        {
+          $addFields : {
+            startGrade : { $arrayElemAt:["$gradeRange",0] },
+            endGrade: { $arrayElemAt: ["$gradeRange", { $subtract: [{ $size: "$gradeRange" }, 1] }] }
+
+          }
+        },
+        { $sort: { startGrade: 1, endGrade: 1 } },
+        { $project: { startGrade: 0, endGrade: 0 } }
+      ]
+    );
     res.status(200).json(subjects);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching subjects', error: err.message });

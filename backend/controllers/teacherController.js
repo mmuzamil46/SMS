@@ -108,7 +108,7 @@ exports.updateTeacher = async (req, res) => {
     // Handle subject update if provided (convert name to ObjectId if needed)
     if (req.body.subject) {
    
-       const subjectDoc = await Subject.findOne({ name: req.body.subject });
+       const subjectDoc = await Subject.findOne({ _id: req.body.subject });
         if (!subjectDoc) {
           return res.status(400).json({ message: 'Subject not found' });
         }
@@ -139,6 +139,30 @@ exports.updateTeacher = async (req, res) => {
     });
   }
 };
+
+exports.getTeacherByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const teacher = await Teacher.findOne({ user: userId })
+      .populate('user', '-password')
+      .populate('subject')
+      .populate('classes');
+
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found for this user ID' });
+    }
+
+    res.status(200).json(teacher);
+  } catch (err) {
+    res.status(500).json({
+      message: 'Error fetching teacher by user ID',
+      error: err.message
+    });
+  }
+};
+
+
 exports.deleteTeacher = async (req, res) => {
   try {
     const teacher = await Teacher.findById(req.params.id);

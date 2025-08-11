@@ -25,6 +25,10 @@ const classSchema = mongoose.Schema({
     min: 10,
     max: 50
   },
+  prevHomeRoomTeacher: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Teacher'
+  }],
   isActive: {
     type: Boolean,
     default: true

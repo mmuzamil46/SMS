@@ -7,6 +7,7 @@ import { ToastContainer,toast } from 'react-toastify';
 
 const StudentsPage = () => {
     const [students, setStudents] = useState([]);
+     const [filteredStudents, setFilteredStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -14,7 +15,9 @@ const StudentsPage = () => {
 const [showViewModal, setShowViewModal] = useState(false);
 const [editingStudent, setEditingStudent] = useState(null);
 const [showEditModal, setShowEditModal] = useState(false);
-
+ const [searchTerm, setSearchTerm] = useState('');
+    const [classFilter, setClassFilter] = useState('all');
+    const [availableClasses, setAvailableClasses] = useState([]);
     const initialFormData = {
     firstName:'',
     fathersName:'',
@@ -60,12 +63,29 @@ const handleEdit = (student) => {
     });
     setShowEditModal(true);
 };
+const getUniqueClasses = (students) => {
+  const classes =  [...new Set(students.map(student => 
+    `${student.class?.name}${student.class?.section}`
+  ).filter(Boolean))];
 
+  return classes.sort((a, b) => {
+
+    const numA = parseInt(a.match(/\d+/)?.[0] || 0 );
+    const numB = parseInt(b.match(/\d+/)?.[0] || 0 );
+    if(numA === numB) return a.localeCompare(b);
+    return numA - numB;
+  });
+}
     useEffect(()=>{
      const fetchStudents = async () =>{
            try{
             const res = await api.get('/students');
             setStudents(res.data);
+            setFilteredStudents(res.data);
+
+
+           
+                setAvailableClasses(getUniqueClasses(res.data));
         }catch(error){
             setError('Faild to load students')
         }finally{
@@ -74,6 +94,28 @@ const handleEdit = (student) => {
      }
      fetchStudents();
     },[])
+  useEffect(() => {
+        let result = students;
+        
+        // Apply class filter
+        if (classFilter !== 'all') {
+            result = result.filter(student => 
+                `${student.class?.name}${student.class?.section}` === classFilter
+            );
+        }
+        
+        // Apply search term filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            result = result.filter(student => 
+                student.fullName.toLowerCase().includes(term) || 
+                student.studentId.toLowerCase().includes(term)
+            );
+        }
+        
+        setFilteredStudents(result);
+    }, [searchTerm, classFilter, students]);
+
 const formatDate = (dateString) => {
   const d = new Date(dateString);
   return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
@@ -107,6 +149,7 @@ const formatDate = (dateString) => {
               password: ${password}`)
             const res = await api.get('/students');
             setStudents(res.data);
+            setAvailableClasses(getUniqueClasses(res.data));
         } catch (error) {
             alert("error adding student")
         }
@@ -148,12 +191,44 @@ const handleUpdateStudent = async (e) => {
     <div className='pt-0'>
       <ToastContainer />
         <h2 className='mb-4'>Students</h2>
-             <button
-        className="btn btn-primary mb-3"
-        onClick={() => setShowModal(true)}
-      >
-        ➕ Add Student
-      </button>
+   <div className="row mb-4">
+                <div className="col-md-6">
+                    <div className="input-group">
+                        <span className="input-group-text">
+                            <i className="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search by name or student ID"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <select
+                        className="form-select"
+                        value={classFilter}
+                        onChange={(e) => setClassFilter(e.target.value)}
+                    >
+                        <option value="all">All Classes</option>
+                        {availableClasses.map((cls, index) => (
+                            <option key={index} value={cls}>{cls}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="col-md-2">
+                    <button
+                        className="btn btn-primary w-100"
+                        onClick={() => setShowModal(true)}
+                    >
+                        ➕ Add Student
+                    </button>
+                </div>
+            </div>
+
+          
         {loading && <p>Loading...</p>}
         {error && <div className='alert alert-danger'>{error}</div>}
 
@@ -176,7 +251,7 @@ const handleUpdateStudent = async (e) => {
                     <tbody>
                         {
                             
-                            students.map((student)=>(
+                            filteredStudents.map((student)=>(
                                 <tr key={student._id}>
                                   
                                     <td>{student.studentId}</td>

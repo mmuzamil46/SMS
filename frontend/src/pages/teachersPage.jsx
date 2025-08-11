@@ -2,17 +2,22 @@ import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import api from '../services/api';
 import { ToastContainer, toast } from 'react-toastify';
-
+import Select from 'react-select';
 const TeachersPage = () => {
-    const [teachers, setTeachers] = useState([]);
+   const [teachers, setTeachers] = useState([]);
+    const [filteredTeachers, setFilteredTeachers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [subjectFilter, setSubjectFilter] = useState('all');
+    const [availableSubjects, setAvailableSubjects] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedTeacher, setSelectedTeacher] = useState(null);
     const [showViewModal, setShowViewModal] = useState(false);
     const [editingTeacher, setEditingTeacher] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
-
+    const [availableClasses, setAvailableClasses] = useState([]);
+    const [selectedClasses, setSelectedClasses] = useState([]);
     const initialFormData = {
         name: '',
         subject: '',
@@ -24,6 +29,37 @@ const TeachersPage = () => {
 
     const [formData, setFormData] = useState(initialFormData);
     const [photo, setPhoto] = useState(null);
+
+      const getUniqueSubjects = (teachers) => {
+        const subjects = [...new Set(teachers
+            .map(teacher => teacher.subject?.name)
+            .filter(Boolean)
+        )];
+        return subjects.sort();
+    };
+  // Filter teachers based on search term and subject filter
+useEffect(() => {
+    let result = teachers;
+    
+    // Apply subject filter
+    if (subjectFilter !== 'all') {
+        result = result.filter(teacher => 
+            teacher.subject?._id === subjectFilter
+        );
+    }
+    
+    // Apply search term filter - with null checks
+    if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        result = result.filter(teacher => {
+            const name = teacher.fullName?.toLowerCase() || '';
+            const teacherId = teacher.teacherId?.toLowerCase() || '';
+            return name.includes(term) || teacherId.includes(term);
+        });
+    }
+    
+    setFilteredTeachers(result);
+}, [searchTerm, subjectFilter, teachers]);
 
     const handleView = (teacher) => {
         setSelectedTeacher(teacher);
@@ -43,10 +79,15 @@ const TeachersPage = () => {
 
     const handleEdit = (teacher) => {
         setEditingTeacher(teacher);
+         const initialClasses = teacher.classes?.map(c => ({
+        value: c._id,
+        label: `${c.name}${c.section}`
+    })) || [];
+    setSelectedClasses(initialClasses);
         setFormData({
             name: teacher.fullName || '',
-            subject: teacher.subject?.name || '',
-            classes: teacher.classes?.map(c => c._id).join(',') || '',
+            subject: teacher.subject?._id || '',
+            classes: teacher.classes?.map(c => c._id) || [],
             phone: teacher.phone || '',
             qualification: teacher.qualification || '',
             teachingSince: teacher.teachingSince?.split('T')[0] || ''
@@ -57,8 +98,15 @@ const TeachersPage = () => {
     useEffect(() => {
         const fetchTeachers = async () => {
             try {
-                const res = await api.get('/teachers');
-                setTeachers(res.data);
+                 const [teachersRes, subjectsRes, classesRes] = await Promise.all([
+                api.get('/teachers'),
+                api.get('/subjects'),
+                api.get('/classes')
+            ]);
+               setTeachers(teachersRes.data);
+            setFilteredTeachers(teachersRes.data);
+            setAvailableSubjects(subjectsRes.data);
+             setAvailableClasses(classesRes.data);
             } catch (error) {
                 setError('Failed to load teachers');
             } finally {
@@ -80,7 +128,15 @@ const TeachersPage = () => {
     const handlePhotoChange = (e) => {
         setPhoto(e.target.files[0]);
     };
-
+     const isHomeroomTeacher = (teacher) => {
+        return teacher.classes?.some(c => c.homeroomTeacher?.toString() === teacher._id.toString());
+    }
+    const getHomeroomClasses = (teacher) => {
+        return teacher.classes
+            ?.filter(c => c.homeroomTeacher?.toString() === teacher._id.toString())
+            .map(c => `${c.name}${c.section}`)
+            .join(', ');
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
         const data = new FormData();
@@ -144,12 +200,45 @@ const TeachersPage = () => {
         <div className=''>
             <ToastContainer />
             <h2 className='mb-4'>Teachers</h2>
-            <button
-                className="btn btn-primary mb-3"
-                onClick={() => setShowModal(true)}
-            >
-                ➕ Add Teacher
-            </button>
+
+               <div className="row mb-4">
+                <div className="col-md-6">
+                    <div className="input-group">
+                        <span className="input-group-text">
+                            <i className="bi bi-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search by name or teacher ID"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <select
+                        className="form-select"
+                        value={subjectFilter}
+                        onChange={(e) => setSubjectFilter(e.target.value)}
+                    >
+                        <option value="all">All Subjects</option>
+                        {availableSubjects.map((subject) => (
+                            <option key={subject._id} value={subject._id}>{subject.name}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="col-md-2">
+                    <button
+                        className="btn btn-primary w-100"
+                        onClick={() => setShowModal(true)}
+                    >
+                        ➕ Add Teacher
+                    </button>
+                </div>
+            </div>
+
+          
             {loading && <p>Loading...</p>}
             {error && <div className='alert alert-danger'>{error}</div>}
 
@@ -167,10 +256,19 @@ const TeachersPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {teachers.map((teacher) => (
+                            {filteredTeachers.map((teacher) => (
                                 <tr key={teacher._id}>
                                     <td>{teacher.teacherId}</td>
-                                    <td>{teacher.fullName}</td>
+                                    {/* <td>{teacher.fullName}</td> */}
+                                    <td>
+                                        {teacher.fullName}
+                                        {isHomeroomTeacher(teacher) && (
+                                            <span className="badge bg-success ms-2" title={`Homeroom for: ${getHomeroomClasses(teacher)}`}>
+                                                Homeroom
+                                            </span>
+                                        )}
+                                    </td>
+
                                     <td>{teacher.subject?.name}</td>
                                     <td>
                                         {teacher.classes?.map(c => `${c.name}${c.section}`).join(', ')}
@@ -189,7 +287,7 @@ const TeachersPage = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {teachers.length === 0 && (
+                            {filteredTeachers.length === 0 && (
                                 <tr>
                                     <td colSpan="6" className="text-center">
                                         No teachers found.
@@ -232,25 +330,43 @@ const TeachersPage = () => {
 
                                         <div className="col-md-6 mb-2">
                                             <label>Subject</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="subject"
-                                                value={formData.subject}
-                                                onChange={handleChange}
-                                                required
-                                            />
+                                          <select
+                            className="form-control"
+                            name="subject"
+                            value={formData.subject}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="">Select Subject</option>
+                            {availableSubjects.map((subject) => (
+                                <option key={subject._id} value={subject._id}>
+                                    {subject.name}
+                                </option>
+                            ))}
+                        </select>
                                         </div>
 
                                         <div className="col-md-6 mb-2">
-                                            <label>Classes (comma separated IDs)</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="classes"
-                                                value={formData.classes}
-                                                onChange={handleChange}
-                                            />
+                                                <label>Classes</label>
+                        <Select
+    isMulti
+    options={availableClasses.map(cls => ({
+      value: cls._id,
+      label: `${cls.name}${cls.section}`
+    }))}
+    value={selectedClasses}
+    onChange={(selectedOptions) => {
+      setSelectedClasses(selectedOptions);
+      setFormData({
+        ...formData,
+        classes: selectedOptions.map(opt => opt.value)
+      });
+    }}
+    className="basic-multi-select"
+    classNamePrefix="select"
+    placeholder="Select classes..."
+  />
+                        <small className="text-muted">Hold Ctrl/Cmd to select multiple</small>
                                         </div>
 
                                         <div className="col-md-6 mb-2">
@@ -367,24 +483,45 @@ const TeachersPage = () => {
 
                                     <div className="col-md-6 mb-2">
                                         <label>Subject</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            name="subject"
-                                            value={formData.subject}
-                                            onChange={handleChange}
-                                        />
+                                       <select
+                        className="form-control"
+                        name="subject"
+                        value={formData.subject}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">Select Subject</option>
+                        {availableSubjects.map((subject) => (
+                            <option key={subject._id} value={subject._id}>
+                                {subject.name}
+                            </option>
+                        ))}
+                    </select>
                                     </div>
 
                                     <div className="col-md-6 mb-2">
-                                        <label>Classes (comma separated IDs)</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            name="classes"
-                                            value={formData.classes}
-                                            onChange={handleChange}
-                                        />
+                                        <label>Classes</label>
+                                          <Select
+    isMulti
+    options={availableClasses.map(cls => ({
+      value: cls._id,
+      label: `${cls.name}${cls.section}`
+    }))}
+    value={availableClasses
+      .filter(cls => formData.classes?.includes(cls._id))
+      .map(cls => ({ value: cls._id, label: `${cls.name}${cls.section}` }))
+    }
+    onChange={(selectedOptions) => {
+      setFormData({
+        ...formData,
+        classes: selectedOptions.map(opt => opt.value)
+      });
+    }}
+    className="basic-multi-select"
+    classNamePrefix="select"
+    placeholder="Select classes..."
+  />
+                    <small className="text-muted">Hold Ctrl/Cmd to select multiple</small>
                                     </div>
 
                                     <div className="col-md-6 mb-2">

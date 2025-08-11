@@ -10,6 +10,7 @@ import PrivateRoute from './components/PrivateRoute';
 import ClassesPage from './pages/ClassesPage';
 import TeachersPage from './pages/teachersPage';
 import SubjectsPage from './pages/SubjectPage';
+import AssessmentPage from './pages/AssessmentPage';
 function App() {
   // const location = useLocation();
   // const isLoginPage = location.pathname.includes('/login');
@@ -24,6 +25,7 @@ function App() {
   <Route path='/classes' element={<ClassesPage/>}/>
   <Route path='/teachers' element={<TeachersPage/>}/>
   <Route path = '/subjects' element={<SubjectsPage/>}/>
+  <Route path='/assessment' element = {<AssessmentPage />}/>
 </Route>
  
 
