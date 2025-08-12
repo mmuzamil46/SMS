@@ -3,8 +3,8 @@ const router = express.Router();
 const upload = require('../middleware/upload');
 const {
     getAllTeachers,
-    getTeacherById,
     getTeacherByUserId,
+    getTeacherById,
     createTeacher,
     updateTeacher,
     deleteTeacher
@@ -13,7 +13,7 @@ const { auth, authorizeRoles } = require('../middleware/authMidleware');
 
 router.post('/',auth,authorizeRoles('admin','student'),upload.single('photo'), createTeacher);
 router.get('/',auth,authorizeRoles('admin','student'), getAllTeachers);
-router.get('/:id',auth,authorizeRoles('admin','teacher'))
+router.get('/byuser/:userId',auth,authorizeRoles('admin','teacher'),getTeacherByUserId)
 router.get('/:id',auth,authorizeRoles('admin','teacher'), getTeacherById);
 router.put('/:id', auth,authorizeRoles('admin','student'),upload.single('photo'),updateTeacher);
 router.delete('/:id',auth,authorizeRoles('admin'), deleteTeacher);

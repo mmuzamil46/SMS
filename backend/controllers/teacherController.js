@@ -143,6 +143,7 @@ exports.updateTeacher = async (req, res) => {
 exports.getTeacherByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
+console.log(userId);
 
     const teacher = await Teacher.findOne({ user: userId })
       .populate('user', '-password')
@@ -155,6 +156,8 @@ exports.getTeacherByUserId = async (req, res) => {
 
     res.status(200).json(teacher);
   } catch (err) {
+    console.log(err);
+    
     res.status(500).json({
       message: 'Error fetching teacher by user ID',
       error: err.message
