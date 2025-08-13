@@ -26,15 +26,28 @@ const AssessmentPage = () => {
   const [termFilter, setTermFilter] = useState('Term 1');
 
 
-useEffect(()=>{
-  if (!subject?._id) return;
-  if(term && activeTab){
-    const totalSoFar = grades.filter(g => g.class && g.class._id === activeTab && g.term.toLowerCase() === term.toLowerCase() &&
-     g.subject && g.subject._id === subject?._id)
-      .reduce((sum, g) => sum + (g.outOf || 0), 0);
-    setRemainingOutOf(Math.max(0, 100 - totalSoFar));
-  }
-},[term, activeTab, grades,subject])
+useEffect(() => {
+  if (!term || !activeTab || !subject?._id) return;
+
+  const classGrades = grades.filter(g =>
+    g.class && g.class._id === activeTab &&
+    g.term.toLowerCase() === term.toLowerCase() &&
+    g.subject && g.subject._id === subject._id
+  );
+
+  // Unique assessments by examType + outOf + createdAt
+  const seen = new Set();
+  let totalSoFar = 0;
+  classGrades.forEach(g => {
+    const key = `${g.examType}-${g.outOf}-${new Date(g.createdAt).getTime()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      totalSoFar += g.outOf || 0;
+    }
+  });
+
+  setRemainingOutOf(Math.max(0, 100 - totalSoFar));
+}, [term, activeTab, grades, subject]);
 
  useEffect(() => {
   const fetchTeacherData = async () => {
@@ -94,6 +107,8 @@ setSubject(teacherData.subject);
   };
 
 const getExamTypesForClass = (classId) => {
+  if (!subject?._id) return [];
+
   const classStudentIds = getStudentsInClass(classId).map(s => s._id);
  
 const classGrades = grades
@@ -101,18 +116,28 @@ const classGrades = grades
     g.class && g.class._id === classId &&
     classStudentIds.includes(g.student._id) &&
     g.term.toLowerCase() === termFilter.toLowerCase() && 
-    g.subject && g.subject._id === subject?._id
+    g.subject && g.subject._id === subject._id
   )
   .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
 
  
-  return classGrades.map(g => ({
-    examType: g.examType,
-    outOf: g.outOf,
-    gradeId: g._id,
-    subject: g.subject?.name || ''
-  }));
+ const seen = new Set();
+  const uniqueHeaders = [];
+  classGrades.forEach(g => {
+    const key = `${g.examType}-${g.outOf}-${new Date(g.createdAt).getTime()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueHeaders.push({
+        examType: g.examType,
+        outOf: g.outOf,
+        gradeId: g._id,
+        subject: g.subject?.name || ''
+      });
+    }
+  });
+
+  return uniqueHeaders;
 };
 const getScoreForExamIndex = (studentId, examHeader, index) => {
   // Match by examType, outOf, subject, and createdAt order
@@ -207,7 +232,7 @@ return grades
     g.student && g.student._id === studentId &&
     g.class && g.class._id === classId &&
     g.term.toLowerCase() === termFilter.toLowerCase() &&
-    g.subject && g.subject._id === subject?._id
+    g.subject && g.subject._id === subject._id
   )
   .reduce((sum, g) => sum + (g.score || 0), 0);
 
