@@ -26,7 +26,7 @@ exports.createTeacher = async (req , res) => {
           role:'teacher'
         });
         const teacherId =  await genarteTeacherId();
-        const subjectDoc = await Subject.findOne({name:subject});
+        const subjectDoc = await Subject.findOne({_id:subject});
 const photo = req.file ? req.file.filename : null;
         const teacher = await Teacher.create({
             user:user._id,
@@ -143,7 +143,7 @@ exports.updateTeacher = async (req, res) => {
 exports.getTeacherByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-console.log(userId);
+
 
     const teacher = await Teacher.findOne({ user: userId })
       .populate('user', '-password')

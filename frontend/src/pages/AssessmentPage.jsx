@@ -15,12 +15,26 @@ const AssessmentPage = () => {
   const [activeTab, setActiveTab] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  const [term,  setTerm] = useState('');
-  const [examType, setExamType] = useState('');
+  const [term,  setTerm] = useState('Term 1');
+  const [examType, setExamType] = useState('Quiz');
   const [outOf, setOutOf] = useState('');
+ 
+  const [remainingOutOf, setRemainingOutOf] = useState(100);
 
   const [editingGradeId, setEditingGradeId] = useState(null);
   const [editingValue, setEditingValue] = useState('');
+  const [termFilter, setTermFilter] = useState('Term 1');
+
+
+useEffect(()=>{
+  if (!subject?._id) return;
+  if(term && activeTab){
+    const totalSoFar = grades.filter(g => g.class && g.class._id === activeTab && g.term.toLowerCase() === term.toLowerCase() &&
+     g.subject && g.subject._id === subject?._id)
+      .reduce((sum, g) => sum + (g.outOf || 0), 0);
+    setRemainingOutOf(Math.max(0, 100 - totalSoFar));
+  }
+},[term, activeTab, grades,subject])
 
  useEffect(() => {
   const fetchTeacherData = async () => {
@@ -38,6 +52,9 @@ const AssessmentPage = () => {
       const teacherData = teacherRes.data;
       setTeacherClasses(teacherData.classes || []);
 setSubject(teacherData.subject);
+
+
+
       if (teacherData.classes?.length > 0) {
         setActiveTab(teacherData.classes[0]._id);
       }
@@ -78,12 +95,18 @@ setSubject(teacherData.subject);
 
 const getExamTypesForClass = (classId) => {
   const classStudentIds = getStudentsInClass(classId).map(s => s._id);
-  // Collect grades for those students, sorted by createdAt so order is consistent
-  const classGrades = grades
-    .filter(g => g.class && g.class._id === classId && classStudentIds.includes(g.student._id))
-    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+ 
+const classGrades = grades
+  .filter(g =>
+    g.class && g.class._id === classId &&
+    classStudentIds.includes(g.student._id) &&
+    g.term.toLowerCase() === termFilter.toLowerCase() && 
+    g.subject && g.subject._id === subject?._id
+  )
+  .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-  // Map them to header objects
+
+ 
   return classGrades.map(g => ({
     examType: g.examType,
     outOf: g.outOf,
@@ -93,9 +116,15 @@ const getExamTypesForClass = (classId) => {
 };
 const getScoreForExamIndex = (studentId, examHeader, index) => {
   // Match by examType, outOf, subject, and createdAt order
-  const studentGrades = grades
-    .filter(g => g.student && g.student._id === studentId && g.class && g.class._id === activeTab)
-    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+const studentGrades = grades
+  .filter(g =>
+    g.student && g.student._id === studentId &&
+    g.class && g.class._id === activeTab &&
+    g.term.toLowerCase() === termFilter.toLowerCase() &&
+     g.subject && g.subject._id === subject?._id 
+  )
+  .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
 
   const grade = studentGrades[index];
   return grade ? { score: grade.score, gradeId: grade._id } : null;
@@ -108,11 +137,19 @@ const getScoreForExamType = (studentId, examType) => {
 };
   const handleCreateAssessment = async () => {
     try {
+       if (!outOf || outOf <= 0) {
+      alert('Please enter a valid Out Of value');
+      return;
+    }
+    if (outOf > remainingOutOf) {
+      alert(`Out Of cannot exceed remaining ${remainingOutOf} for ${term}`);
+      return;
+    }
       const studentsInClass = getStudentsInClass(activeTab);
 
       const payload = studentsInClass.map(stu => ({
         student: stu._id,
-        subject: subject, // you may need to set subject based on teacher or tab
+        subject: subject._id, // you may need to set subject based on teacher or tab
         class: activeTab,
         score: 0,
         outOf,
@@ -122,13 +159,15 @@ const getScoreForExamType = (studentId, examType) => {
       }));
 
       await api.post('/grades/bulk', payload); // bulk insert endpoint in backend
+
+      
       const gradesRes = await api.get('/grades');
       setGrades(gradesRes.data);
 
-      setShowModal(false);
-      setTerm('');
-      setExamType('');
-      setOutOf('');
+     setShowModal(false);
+    setTerm('Term 1');
+    setExamType('Quiz');
+    setOutOf('');
     } catch (err) {
       console.log(err);
       
@@ -138,15 +177,22 @@ const getScoreForExamType = (studentId, examType) => {
 
   const handleGradeClick = (grade) => {
     setEditingGradeId(grade._id);
-    setEditingValue(grade.score);
+  setEditingValue(grade.score);
   };
 
   const handleGradeKeyDown = async (e, grade) => {
     if (e.key === 'Enter') {
+      const newScore = Number(editingValue);
+
+   
+    if (newScore < 0 || newScore > grade.outOf) {
+      alert(`Score must be between 0 and ${grade.outOf}`);
+      return;
+    }
       try {
-        await api.put(`/grades/${grade._id}`, { score: Number(editingValue) });
+        await api.put(`/grades/${grade._id}`, { score: newScore });
         const updated = grades.map(g => 
-          g._id === grade._id ? { ...g, score: Number(editingValue) } : g
+          g._id === grade._id ? { ...g, score: newScore } : g
         );
         setGrades(updated);
         setEditingGradeId(null);
@@ -155,13 +201,41 @@ const getScoreForExamType = (studentId, examType) => {
       }
     }
   };
+  const getTotalScoreForStudent = (studentId, classId) => {
+return grades
+  .filter(g =>
+    g.student && g.student._id === studentId &&
+    g.class && g.class._id === classId &&
+    g.term.toLowerCase() === termFilter.toLowerCase() &&
+    g.subject && g.subject._id === subject?._id
+  )
+  .reduce((sum, g) => sum + (g.score || 0), 0);
+
+};
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
-let examHeaders   = getExamTypesForClass(activeTab);
+let examHeaders   = subject?._id ? getExamTypesForClass(activeTab) : [];
   return (
      <div className="container-fluid pt-3">
-      <h2 className="mb-4">Student Assessments</h2>
-
+   
+<div className="d-flex justify-content-between align-items-center mb-3">
+  <h2>Student Assessments</h2>
+  <div className="text-end">
+    <div><strong>Academic Year:</strong> {grades.find(g => g.class && g.class._id === activeTab)?.academicYear || new Date().getFullYear()}</div>
+    <div><strong>Subject:</strong> { subject.name || 'N/A'}</div>
+      <div className="mt-2">
+    <Form.Select
+      size="sm"
+      style={{ width: '150px', display: 'inline-block' }}
+      value={termFilter}
+      onChange={(e) => setTermFilter(e.target.value)}
+    >
+      <option value="Term 1">Term 1</option>
+      <option value="Term 2">Term 2</option>
+    </Form.Select>
+  </div>
+  </div>
+</div>
       {teacherClasses.length > 0 ? (
         <>
           <Button 
@@ -197,6 +271,7 @@ let examHeaders   = getExamTypesForClass(activeTab);
           {eh.examType} ({eh.outOf})
         </th>
       ))}
+      <th>Total (100%)</th>
     </tr>
   </thead>
   <tbody>
@@ -216,9 +291,10 @@ let examHeaders   = getExamTypesForClass(activeTab);
                   {editingGradeId === gradeData.gradeId ? (
                     <input
                       type="number"
+                      max={eh.outOf}
                       value={editingValue}
                       onChange={(e) => setEditingValue(e.target.value)}
-                      onKeyDown={(e) => handleGradeKeyDown(e, { _id: gradeData.gradeId })}
+                      onKeyDown={(e) => handleGradeKeyDown(e, { _id: gradeData.gradeId , outOf: eh.outOf})}
                       autoFocus
                     />
                   ) : (
@@ -230,6 +306,7 @@ let examHeaders   = getExamTypesForClass(activeTab);
               return <td key={idx} className="text-muted">—</td>;
             }
           })}
+          <td><strong>{getTotalScoreForStudent(student._id, cls._id)}</strong></td>
         </tr>
       ))
     ) : (
@@ -253,30 +330,41 @@ let examHeaders   = getExamTypesForClass(activeTab);
             </Modal.Header>
             <Modal.Body>
               <Form>
-                <Form.Group>
-                  <Form.Label>Term</Form.Label>
-                  <Form.Control 
-                    type="text"
-                    value={term}
-                    onChange={(e) => setTerm(e.target.value)}
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Exam Type</Form.Label>
-                  <Form.Control 
-                    type="text"
-                    value={examType}
-                    onChange={(e) => setExamType(e.target.value)}
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Out Of</Form.Label>
-                  <Form.Control 
-                    type="number"
-                    value={outOf}
-                    onChange={(e) => setOutOf(e.target.value)}
-                  />
-                </Form.Group>
+                <Form.Group className="mb-3">
+    <Form.Label>Term</Form.Label>
+    <Form.Select value={term} onChange={(e) => setTerm(e.target.value)}>
+      <option value="Term 1">Term 1</option>
+      <option value="Term 2">Term 2</option>
+    </Form.Select>
+  </Form.Group>
+
+  <Form.Group className="mb-3">
+    <Form.Label>Exam Type</Form.Label>
+    <Form.Select value={examType} onChange={(e) => setExamType(e.target.value)}>
+      <option value="Quiz">Quiz</option>
+      <option value="Mid-exam">Mid-exam</option>
+      <option value="Assignment">Assignment</option>
+      <option value="Final">Final</option>
+    </Form.Select>
+  </Form.Group>
+
+  <Form.Group className="mb-3">
+    <Form.Label>
+      Out Of (Max Remaining: {remainingOutOf})
+    </Form.Label>
+    <Form.Control
+      type="number"
+      value={outOf}
+      min="1"
+      max={remainingOutOf}
+      onChange={(e) => {
+        const val = Number(e.target.value);
+        if (val <= remainingOutOf) {
+          setOutOf(val);
+        }
+      }}
+    />
+  </Form.Group>
               </Form>
             </Modal.Body>
             <Modal.Footer>

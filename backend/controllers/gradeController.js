@@ -23,7 +23,7 @@ exports.createGrade = async (req, res) => {
 // POST /grades/bulk
 exports.createBulkGrades = async (req, res) => {
   try {
-    console.log(req.body);
+    
     
     const grades = await Grade.insertMany(req.body);
     res.status(200).json(grades);
@@ -45,6 +45,32 @@ exports.getGrades = async (req, res) => {
   }
 };
 
+exports.getFilteredGrades = async (req, res) => {
+  try {
+    const { classId, subjectId, term } = req.query;
+    
+    if (!classId || !subjectId || !term) {
+      return res.status(400).json({ 
+        message: 'classId, subjectId, and term are required' 
+      });
+    }
+
+    const grades = await Grade.find({
+      'class': classId,
+      'subject': subjectId,
+      'term': term
+    })
+    .populate('student', 'studentId fullName')
+    .populate('class', 'name section')
+    .populate('subject', 'name')
+    .sort('createdAt');
+
+    res.json(grades);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 exports.getGradeById = async (req, res) => {
   try {
     const grade = await Grade.findById(req.params.id)
