@@ -11,6 +11,8 @@ import ClassesPage from './pages/ClassesPage';
 import TeachersPage from './pages/teachersPage';
 import SubjectsPage from './pages/SubjectPage';
 import AssessmentPage from './pages/AssessmentPage';
+import AttendancePage from './pages/AttendancePage';
+import ErrorPage from './pages/ErrorPage';
 function App() {
   // const location = useLocation();
   // const isLoginPage = location.pathname.includes('/login');
@@ -26,8 +28,10 @@ function App() {
   <Route path='/teachers' element={<TeachersPage/>}/>
   <Route path = '/subjects' element={<SubjectsPage/>}/>
   <Route path='/assessment' element = {<AssessmentPage />}/>
+  <Route path='/attendance' element={<AttendancePage/>}/>
+    <Route path="*" element={<ErrorPage />} />
 </Route>
- 
+
 
 </Routes>
 

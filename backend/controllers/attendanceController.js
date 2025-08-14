@@ -7,7 +7,7 @@ exports.markAttendance = async (req, res) => {
   try {
     const { student, class: classId, date, status, reason } = req.body;
 
-console.log(student, classId, date, status, reason);
+
 
   
     const existing = await Attendance.findOne({ student, date });
@@ -42,6 +42,8 @@ exports.getAttendance = async (req, res) => {
 
     res.status(200).json(records);
   } catch (err) {
+    console.log(err);
+    
     res.status(500).json({ message: 'Error fetching attendance', error: err.message });
   }
 };
@@ -113,7 +115,7 @@ exports.getAttendanceSummary = async (req, res) => {
       const studentId = record.student._id.toString();
       if (!summaryMap[studentId]) {
         summaryMap[studentId] = {
-          name: record.student.user?.name || 'N/A',
+          name: record.student.fullName || 'N/A',
           studentId: record.student.studentId,
           present: 0,
           absent: 0,
@@ -191,7 +193,7 @@ exports.getClassMonthlyAttendance = async (req, res) => {
 
       return {
         studentId: student.studentId,
-        name: student.user?.name || 'N/A',
+        name: student.fullName || 'N/A',
         attendance
       };
     });
@@ -206,6 +208,8 @@ exports.getClassMonthlyAttendance = async (req, res) => {
     });
 
   } catch (err) {
+    console.log(err);
+    
     res.status(500).json({ message: 'Error building class monthly view', error: err.message });
   }
 };

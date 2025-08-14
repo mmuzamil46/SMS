@@ -16,7 +16,7 @@ const {
 router.post('/',auth,authorizeRoles('teacher'),markAttendance);
 router.get('/', auth,authorizeRoles('teacher'),getAttendance);
 router.get('/summary',auth,authorizeRoles('teacher'), getAttendanceSummary);
-router.get('/summary/class-daily',auth,authorizeRoles('teacher'), getClassMonthlyAttendance);
+router.get('/monthly',auth,authorizeRoles('teacher'), getClassMonthlyAttendance);
 router.get('/:id',auth,authorizeRoles('teacher'), getAttendanceById);
 router.put('/:id', auth,authorizeRoles('teacher'),updateAttendance);
 router.delete('/:id',auth,authorizeRoles('teacher'), deleteAttendance);
